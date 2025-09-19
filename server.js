@@ -8,13 +8,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-const DATA_FILE = path.join(__dirname, "data/users.json");
-fs.ensureFileSync(DATA_FILE);
+const USERS_FILE = path.join(__dirname, "data/users.json");
+fs.ensureFileSync(USERS_FILE);
 
 // Load users
 function loadUsers() {
   try {
-    return fs.readJSONSync(DATA_FILE);
+    return fs.readJSONSync(USERS_FILE);
   } catch {
     return [];
   }
@@ -22,42 +22,37 @@ function loadUsers() {
 
 // Save users
 function saveUsers(users) {
-  fs.writeJSONSync(DATA_FILE, users, { spaces: 2 });
+  fs.writeJSONSync(USERS_FILE, users, { spaces: 2 });
 }
 
-// REGISTER
+// REGISTER API
 app.post("/register", (req, res) => {
   const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  if (!username || !email || !password)
     return res.status(400).json({ success: false, error: "All fields required" });
-  }
 
   const users = loadUsers();
-  const exists = users.find(u => u.username === username || u.email === email);
-  if (exists) {
+  if (users.find(u => u.username === username || u.email === email)) {
     return res.status(400).json({ success: false, error: "User already exists" });
   }
 
   users.push({ username, email, password });
   saveUsers(users);
 
-  return res.json({ success: true });
+  return res.json({ success: true, username });
 });
 
-// LOGIN
+// LOGIN API
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) {
+  if (!username || !password)
     return res.status(400).json({ success: false, error: "All fields required" });
-  }
 
   const users = loadUsers();
   const user = users.find(u => u.username === username && u.password === password);
-  if (!user) {
-    return res.status(400).json({ success: false, error: "Invalid credentials" });
-  }
+  if (!user) return res.status(400).json({ success: false, error: "Invalid credentials" });
 
-  return res.json({ success: true, username: user.username });
+  return res.json({ success: true, username });
 });
 
 // Start server
