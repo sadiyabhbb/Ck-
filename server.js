@@ -1,7 +1,7 @@
 const express = require("express");
 const fs = require("fs-extra");
-const cors = require("cors");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -13,46 +13,42 @@ fs.ensureFileSync(USERS_FILE);
 
 // Load users
 function loadUsers() {
-  try {
-    return fs.readJSONSync(USERS_FILE);
-  } catch {
-    return [];
-  }
+    try {
+        return fs.readJSONSync(USERS_FILE);
+    } catch {
+        return [];
+    }
 }
 
 // Save users
 function saveUsers(users) {
-  fs.writeJSONSync(USERS_FILE, users, { spaces: 2 });
+    fs.writeJSONSync(USERS_FILE, users, { spaces: 2 });
 }
 
-// REGISTER API
+// Register
 app.post("/register", (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password)
-    return res.status(400).json({ success: false, error: "All fields required" });
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) return res.status(400).json({ error: "All fields required" });
 
-  const users = loadUsers();
-  if (users.find(u => u.username === username || u.email === email)) {
-    return res.status(400).json({ success: false, error: "User already exists" });
-  }
+    const users = loadUsers();
+    const exists = users.find(u => u.email === email);
+    if (exists) return res.status(400).json({ error: "Email already registered" });
 
-  users.push({ username, email, password });
-  saveUsers(users);
-
-  return res.json({ success: true, username });
+    users.push({ username, email, password });
+    saveUsers(users);
+    res.json({ success: true, username });
 });
 
-// LOGIN API
+// Login
 app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password)
-    return res.status(400).json({ success: false, error: "All fields required" });
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
-  const users = loadUsers();
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) return res.status(400).json({ success: false, error: "Invalid credentials" });
+    const users = loadUsers();
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
 
-  return res.json({ success: true, username });
+    res.json({ success: true, username: user.username });
 });
 
 // Start server
