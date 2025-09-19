@@ -1,48 +1,82 @@
-// Toggle between login and register
 const container = document.querySelector('.container');
 const registerBtn = document.querySelector('.register-btn');
 const loginBtn = document.querySelector('.login-btn');
 
 registerBtn.addEventListener('click', () => {
-    container.classList.add('active');
-})
+    container.classList.add('active'); // register popup
+});
 
 loginBtn.addEventListener('click', () => {
-    container.classList.remove('active');
-})
+    container.classList.remove('active'); // login popup
+});
 
-// Registration
-document.querySelector('.register form').addEventListener('submit', async e => {
+// REGISTER
+const registerForm = document.querySelector('.register form');
+registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = e.target.querySelector('input[placeholder="Usuario"]').value;
-    const password = e.target.querySelector('input[placeholder="Contraseña"]').value;
+
+    const username = registerForm.querySelector('input[type="text"]').value;
+    const email = registerForm.querySelector('input[type="email"]').value;
+    const password = registerForm.querySelector('input[type="password"]').value;
+
     try {
         const res = await fetch('/register', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, password })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
         });
         const data = await res.json();
-        alert(data.success ? "Registered!" : "Error: " + data.error);
-    } catch (err) {
-        alert("Server error!");
+
+        if(data.success){
+            alert('✅ Registered! Logging you in...');
+            
+            // Auto-login after registration
+            const loginRes = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const loginData = await loginRes.json();
+
+            if(loginData.success){
+                container.classList.remove('active'); // close popup
+                alert('✅ Logged in successfully!');
+            } else {
+                alert('❌ Auto-login failed: ' + loginData.error);
+            }
+        } else {
+            alert('❌ Registration failed: ' + data.error);
+        }
+    } catch(err) {
+        console.error(err);
+        alert('❌ Something went wrong!');
     }
 });
 
-// Login
-document.querySelector('.login form').addEventListener('submit', async e => {
+// LOGIN
+const loginForm = document.querySelector('.login form');
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = e.target.querySelector('input[placeholder="Usuario"]').value;
-    const password = e.target.querySelector('input[placeholder="Contraseña"]').value;
+
+    const username = loginForm.querySelector('input[type="text"]').value;
+    const password = loginForm.querySelector('input[type="password"]').value;
+
     try {
         const res = await fetch('/login', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-        alert(data.success ? "Logged in!" : "Error: " + data.error);
-    } catch (err) {
-        alert("Server error!");
+
+        if(data.success){
+            container.classList.remove('active'); // close popup
+            alert('✅ Logged in successfully!');
+        } else {
+            alert('❌ Login failed: ' + data.error);
+        }
+    } catch(err) {
+        console.error(err);
+        alert('❌ Something went wrong!');
     }
 });
