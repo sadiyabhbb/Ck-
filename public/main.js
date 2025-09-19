@@ -2,22 +2,18 @@ const container = document.querySelector('.container');
 const registerBtn = document.querySelector('.register-btn');
 const loginBtn = document.querySelector('.login-btn');
 
-registerBtn.addEventListener('click', () => {
-    container.classList.add('active'); // register popup
-});
+const registerForm = document.querySelector('.form-box.register form');
+const loginForm = document.querySelector('.form-box.login form');
 
-loginBtn.addEventListener('click', () => {
-    container.classList.remove('active'); // login popup
-});
+registerBtn.addEventListener('click', () => container.classList.add('active'));
+loginBtn.addEventListener('click', () => container.classList.remove('active'));
 
 // REGISTER
-const registerForm = document.querySelector('.register form');
 registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const username = registerForm.querySelector('input[type="text"]').value;
-    const email = registerForm.querySelector('input[type="email"]').value;
-    const password = registerForm.querySelector('input[type="password"]').value;
+    const username = registerForm.querySelector('input[placeholder="Usuario"]').value;
+    const email = registerForm.querySelector('input[placeholder="Email"]').value;
+    const password = registerForm.querySelector('input[placeholder="Contraseña"]').value;
 
     try {
         const res = await fetch('/register', {
@@ -26,40 +22,16 @@ registerForm.addEventListener('submit', async (e) => {
             body: JSON.stringify({ username, email, password })
         });
         const data = await res.json();
-
-        if(data.success){
-            alert('✅ Registered! Logging you in...');
-            
-            // Auto-login after registration
-            const loginRes = await fetch('/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const loginData = await loginRes.json();
-
-            if(loginData.success){
-                container.classList.remove('active'); // close popup
-                alert('✅ Logged in successfully!');
-            } else {
-                alert('❌ Auto-login failed: ' + loginData.error);
-            }
-        } else {
-            alert('❌ Registration failed: ' + data.error);
-        }
-    } catch(err) {
-        console.error(err);
-        alert('❌ Something went wrong!');
-    }
+        alert(data.success ? `Registered as ${data.username}` : data.error);
+        if(data.success) container.classList.remove('active'); // auto switch to login
+    } catch (err) { console.error(err); }
 });
 
 // LOGIN
-const loginForm = document.querySelector('.login form');
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const username = loginForm.querySelector('input[type="text"]').value;
-    const password = loginForm.querySelector('input[type="password"]').value;
+    const username = loginForm.querySelector('input[placeholder="Usuario"]').value;
+    const password = loginForm.querySelector('input[placeholder="Contraseña"]').value;
 
     try {
         const res = await fetch('/login', {
@@ -68,15 +40,10 @@ loginForm.addEventListener('submit', async (e) => {
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-
+        alert(data.success ? `Logged in as ${data.username}` : data.error);
         if(data.success){
-            container.classList.remove('active'); // close popup
-            alert('✅ Logged in successfully!');
-        } else {
-            alert('❌ Login failed: ' + data.error);
+            // hide login popup or redirect to dashboard
+            alert("Now you can use Monitor dashboard!");
         }
-    } catch(err) {
-        console.error(err);
-        alert('❌ Something went wrong!');
-    }
+    } catch (err) { console.error(err); }
 });
